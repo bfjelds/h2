@@ -1179,6 +1179,7 @@ where
     type Output = Result<Connection<T, B>, crate::Error>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        log::trace!("I wanna be loved by you, just you ... shabba dabba");
         log::trace!("Handshake::poll(); state={:?};", self.state);
         use crate::server::Handshaking::*;
 

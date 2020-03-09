@@ -1343,8 +1343,10 @@ impl proto::Peer for Peer {
     ) -> Result<Self::Poll, RecvError> {
         use http::{uri, Version};
 
+        log::debug!("enter convert_poll_message");
         let mut b = Request::builder();
-
+        log::debug!("... convert_poll_message ===> after Request::builder()");
+        
         macro_rules! malformed {
             ($($arg:tt)*) => {{
                 log::debug!($($arg)*);
@@ -1357,32 +1359,39 @@ impl proto::Peer for Peer {
 
         b = b.version(Version::HTTP_2);
 
+        log::debug!("... convert_poll_message ===> pre pseudo.method");
         if let Some(method) = pseudo.method {
             b = b.method(method);
         } else {
             malformed!("malformed headers: missing method");
         }
+        log::debug!("... convert_poll_message ===> post pseudo.method");
 
         // Specifying :status for a request is a protocol error
         if pseudo.status.is_some() {
             log::trace!("malformed headers: :status field on request; PROTOCOL_ERROR");
             return Err(RecvError::Connection(Reason::PROTOCOL_ERROR));
         }
+        log::debug!("... convert_poll_message ===> post pseudo.statust.is_some()");
 
         // Convert the URI
         let mut parts = uri::Parts::default();
+        log::debug!("... convert_poll_message ===> post uri::Parts::default()");
 
         // A request translated from HTTP/1 must not include the :authority
         // header
         if let Some(authority) = pseudo.authority {
             let maybe_authority = uri::Authority::from_maybe_shared(authority.clone().into_inner());
+            log::debug!("... convert_poll_message ===> post maybe_authority; {:?}", maybe_authority);
             parts.authority = Some(
                 match maybe_authority {
                     Ok(val) => val,
                     Err(_) => uri::Authority::from_maybe_shared(Bytes::from("example.com")).unwrap(),
                 }
             );
+            log::debug!("... convert_poll_message ===> post parts.authority");
         }
+        log::debug!("... convert_poll_message ===> post pseudo.authority");
 
         // A :scheme is always required.
         if let Some(scheme) = pseudo.scheme {
